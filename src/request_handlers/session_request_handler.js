@@ -68,6 +68,7 @@ ghostdriver.SessionReqHand = function(session) {
         DOUBLE_CLICK    : "doubleclick",
         PHANTOM_DIR     : "/phantom/",
         PHANTOM_EXEC    : "execute",
+        PHANTOM_REQUEST : "request",
         LOG             : "log",
         TYPES           : "types"
     };
@@ -168,6 +169,9 @@ ghostdriver.SessionReqHand = function(session) {
             return;
         } else if (req.urlParsed.file === _const.PHANTOM_EXEC && req.urlParsed.directory === _const.PHANTOM_DIR && req.method === "POST") {
             _executePhantomJS(req, res);
+            return;
+        } else if (req.urlParsed.file === _const.PHANTOM_REQUEST && req.urlParsed.directory === _const.PHANTOM_DIR && req.method === "POST") {
+            _postUrlCommand(req, res);
             return;
         } else if (req.urlParsed.file === _const.CLICK && req.method === "POST") {
             _postMouseClickCommand(req, res, "click");
@@ -496,7 +500,7 @@ ghostdriver.SessionReqHand = function(session) {
 
             // Load URL and wait for load to finish (or timeout)
             currWindow.execFuncAndWaitForLoad(function() {
-                    currWindow.open(postObj.url.trim());
+                    currWindow.open(postObj.url.trim(), postObj.settings);
                 },
                 _createOnSuccessHandler(res),               //< success
                 function(errMsg) {                          //< failure/timeout
