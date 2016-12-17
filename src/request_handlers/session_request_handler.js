@@ -69,6 +69,7 @@ ghostdriver.SessionReqHand = function(session) {
         PHANTOM_DIR     : "/phantom/",
         PHANTOM_EXEC    : "execute",
         PHANTOM_REQUEST : "request",
+        PHANTOM_PAGE    : "page",
         LOG             : "log",
         TYPES           : "types"
     };
@@ -172,6 +173,9 @@ ghostdriver.SessionReqHand = function(session) {
             return;
         } else if (req.urlParsed.file === _const.PHANTOM_REQUEST && req.urlParsed.directory === _const.PHANTOM_DIR && req.method === "POST") {
             _postUrlCommand(req, res);
+            return;
+        } else if (req.urlParsed.file === _const.PHANTOM_PAGE && req.urlParsed.directory === _const.PHANTOM_DIR && req.method === "GET") {
+            _getPhantomSourceCommand(req, res);
             return;
         } else if (req.urlParsed.file === _const.CLICK && req.method === "POST") {
             _postMouseClickCommand(req, res, "click");
@@ -685,6 +689,17 @@ ghostdriver.SessionReqHand = function(session) {
                 req,
                 _session);
         }
+    },
+
+    _getPhantomSourceCommand = function(req, res) {
+        var page = _protoParent.getSessionCurrWindow.call(this, _session, req);
+        var source = {
+            content: page.frameContent,
+            resources: page.resources,
+            startTime: page.startTime,
+            endTime: page.endTime
+        };
+        res.success(_session.getId(), source);
     },
 
     _getSourceCommand = function(req, res) {
