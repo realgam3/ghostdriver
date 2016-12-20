@@ -693,11 +693,14 @@ ghostdriver.SessionReqHand = function(session) {
 
     _getPhantomSourceCommand = function(req, res) {
         var page = _protoParent.getSessionCurrWindow.call(this, _session, req);
+
         var source = {
             content: page.frameContent,
-            resources: page.resources,
+            resources: page.flows,
             startTime: page.startTime,
-            endTime: page.endTime
+            endTime: page.endTime,
+            history: page.history,
+            status: page.status
         };
         res.success(_session.getId(), source);
     },

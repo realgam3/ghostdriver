@@ -388,7 +388,7 @@ ghostdriver.Session = function(desiredCapabilities) {
 
         // 7. Applying Page custom headers received via capabilities
         page.customHeaders = _pageCustomHeaders;
-        
+
         // 8. Applying Page zoomFactor
         page.zoomFactor = _pageZoomFactor;
 
@@ -423,52 +423,65 @@ ghostdriver.Session = function(desiredCapabilities) {
         };
 
         // 11. Log Page network activity
+        page.status = null;
+        page.flows = [];
+        page.history = [];
         page.resources = [];
         page.startTime = null;
         page.endTime = null;
         page.setOneShotCallback("onLoadStarted", function() {
             page.startTime = new Date();
         });
-        page.setOneShotCallback("onLoadFinished", function() {
+        page.setOneShotCallback("onLoadFinished", function(status) {
             page.endTime = new Date();
+            page.status = status;
         });
         page.onResourceRequested = function (req) {
             _log.debug("page.onResourceRequested", JSON.stringify(req));
 
             // Register HTTP Request
-            page.resources[req.id] = {
-                request: req,
-                startReply: null,
-                endReply: null,
-                error: null
-            };
+            [page.resources, page.flows].forEach(function (element) {
+                element[req.id] = {
+                    request: req,
+                    startReply: null,
+                    endReply: null,
+                    error: null
+                };
+            });
         };
         page.onResourceReceived = function (res) {
             _log.debug("page.onResourceReceived", JSON.stringify(res));
 
             // Register HTTP Response
-            page.resources[res.id] || (page.resources[res.id] = {});
-            if (res.stage === 'start') {
-                page.resources[res.id].startReply = res;
-            } else if (res.stage === 'end') {
-                page.resources[res.id].endReply = res;
-            }
+            [page.resources, page.flows].forEach(function (element) {
+                element[res.id] || (element[res.id] = {});
+                if (res.stage === 'start') {
+                    element[res.id].startReply = res;
+                } else if (res.stage === 'end') {
+                    element[res.id].endReply = res;
+                }
+            });
         };
         page.onResourceError = function(resError) {
             _log.debug("page.onResourceError", JSON.stringify(resError));
 
             // Register HTTP Error
-            page.resources[resError.id] || (page.resources[resError.id] = {});
-            page.resources[resError.id].error = resError;
+            [page.resources, page.flows].forEach(function (element) {
+                element[resError.id] || (element[resError.id] = {});
+                element[resError.id].error = resError;
+            });
         };
         page.onResourceTimeout = function(req) {
             _log.debug("page.onResourceTimeout", JSON.stringify(req));
 
             // Register HTTP Timeout
-            page.resources[req.id] || (page.resources[req.id] = {});
-            page.resources[req.id].error = req;
+            [page.resources, page.flows].forEach(function (element) {
+                element[req.id] || (element[req.id] = {});
+                element[req.id].error = req;
+            });
         };
         page.onNavigationRequested = function(url, type, willNavigate, main) {
+            page.history.push(url);
             // Clear page log before page loading
             if (main && willNavigate) {
                 _clearPageLog(page);
