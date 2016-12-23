@@ -504,6 +504,9 @@ ghostdriver.SessionReqHand = function(session) {
 
             // Load URL and wait for load to finish (or timeout)
             currWindow.execFuncAndWaitForLoad(function() {
+                    currWindow.flows = [];
+                    currWindow.history = [];
+                    currWindow.resources = [];
                     currWindow.open(postObj.url.trim(), postObj.settings);
                 },
                 _createOnSuccessHandler(res),               //< success
@@ -693,6 +696,7 @@ ghostdriver.SessionReqHand = function(session) {
 
     _getPhantomSourceCommand = function(req, res) {
         var page = _protoParent.getSessionCurrWindow.call(this, _session, req);
+        page.flows.push(page.resources[page.resources.length - 1]);
 
         var source = {
             content: page.frameContent,

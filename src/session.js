@@ -440,50 +440,45 @@ ghostdriver.Session = function(desiredCapabilities) {
             _log.debug("page.onResourceRequested", JSON.stringify(req));
 
             // Register HTTP Request
-            [page.resources, page.flows].forEach(function (element) {
-                element[req.id] = {
-                    request: req,
-                    startReply: null,
-                    endReply: null,
-                    error: null
-                };
-            });
+            page.resources[req.id] = {
+                request: req,
+                startReply: null,
+                endReply: null,
+                error: null
+            };
         };
         page.onResourceReceived = function (res) {
             _log.debug("page.onResourceReceived", JSON.stringify(res));
 
             // Register HTTP Response
-            [page.resources, page.flows].forEach(function (element) {
-                element[res.id] || (element[res.id] = {});
-                if (res.stage === 'start') {
-                    element[res.id].startReply = res;
-                } else if (res.stage === 'end') {
-                    element[res.id].endReply = res;
-                }
-            });
+            page.resources[res.id] || (page.resources[res.id] = {});
+            if (res.stage === 'start') {
+                page.resources[res.id].startReply = res;
+            } else if (res.stage === 'end') {
+                page.resources[res.id].endReply = res;
+            }
         };
         page.onResourceError = function(resError) {
             _log.debug("page.onResourceError", JSON.stringify(resError));
 
             // Register HTTP Error
-            [page.resources, page.flows].forEach(function (element) {
-                element[resError.id] || (element[resError.id] = {});
-                element[resError.id].error = resError;
-            });
+            page.resources[resError.id] || (page.resources[resError.id] = {});
+            page.resources[resError.id].error = resError;
         };
         page.onResourceTimeout = function(req) {
             _log.debug("page.onResourceTimeout", JSON.stringify(req));
 
             // Register HTTP Timeout
-            [page.resources, page.flows].forEach(function (element) {
-                element[req.id] || (element[req.id] = {});
-                element[req.id].error = req;
-            });
+            page.resources[req.id] || (page.resources[req.id] = {});
+            page.resources[req.id].error = req;
         };
         page.onNavigationRequested = function(url, type, willNavigate, main) {
             page.history.push(url);
             // Clear page log before page loading
             if (main && willNavigate) {
+                if(page.resources.length) {
+                    page.flows.push(page.resources[page.resources.length - 1]);
+                }
                 _clearPageLog(page);
             }
         };
