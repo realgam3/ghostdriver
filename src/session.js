@@ -424,9 +424,8 @@ ghostdriver.Session = function(desiredCapabilities) {
 
         // 11. Log Page network activity
         page.status = null;
-        page.flows = [];
         page.history = [];
-        page.resources = [];
+        page.resources = {};
         page.startTime = null;
         page.endTime = null;
         page.setOneShotCallback("onLoadStarted", function() {
@@ -476,9 +475,6 @@ ghostdriver.Session = function(desiredCapabilities) {
             page.history.push(url);
             // Clear page log before page loading
             if (main && willNavigate) {
-                if(page.resources.length) {
-                    page.flows.push(page.resources[page.resources.length - 1]);
-                }
                 _clearPageLog(page);
             }
         };
@@ -522,7 +518,6 @@ ghostdriver.Session = function(desiredCapabilities) {
      * @private
      */
     _clearPageLog = function (page) {
-        page.resources = [];
         page.browserLog = [];
     },
 
@@ -702,7 +697,6 @@ ghostdriver.Session = function(desiredCapabilities) {
             tmp.push(_createLogEntry(
                 "INFO",
                 JSON.stringify(har.createHar(page, page.resources))));
-            page.resources = [];
             return tmp;
         }
 
